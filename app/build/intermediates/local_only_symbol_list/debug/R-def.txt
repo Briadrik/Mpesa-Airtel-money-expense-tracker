@@ -1,0 +1,24 @@
+R_DEF: Internal format may change without notice
+local
+id amountText
+id categoryText
+id chipContainer
+id counterpartyText
+id feeText
+id nav_categories
+id nav_dashboard
+id nav_history
+id providerBadge
+id root
+id suggestText
+id summaryText
+id timestampText
+layout activity_categorize
+layout activity_main
+layout item_category_chip
+layout item_transaction
+menu bottom_nav
+string app_name
+string tagline
+style Theme.MpesaTracker
+style Theme.MpesaTracker.Dialog
