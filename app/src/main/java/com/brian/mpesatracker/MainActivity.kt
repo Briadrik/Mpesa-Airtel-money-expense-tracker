@@ -442,23 +442,43 @@ class BarChartView(context: android.content.Context) : android.view.View(context
         "#C0CA33", "#FFB300", "#757575"
     )
 
+    // Convert all fixed sizes from dp to px so the chart looks the same on every device.
+    private val d = context.resources.displayMetrics.density
+    private val rowH = 40f * d
+    private val gap = 12f * d
+    private val cornerR = 6f * d
+    private val labelAmtGap = 8f * d   // breathing room between bar end and amount text
+
     private val barPaint = Paint(Paint.ANTI_ALIAS_FLAG)
-    private val textPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        textSize = 36f
+    private val textPaint = android.text.TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
+        textSize = 13f * d
         color = Color.parseColor("#1A1A1A")
     }
     private val amtPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        textSize = 32f
+        textSize = 12.5f * d
         color = Color.parseColor("#555555")
+        textAlign = Paint.Align.RIGHT   // draw right-to-left from a fixed right edge
     }
     private val bgPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         color = Color.parseColor("#F0F0F0")
     }
 
+    // Computed once per data set so columns always fit their content.
+    private var labelW = 0f
+    private var amtColW = 0f
+
     fun setData(items: List<CategoryTotal>) {
         data = items
-        val rowHeight = 72f
-        val totalHeight = (items.size * (rowHeight + 20) + 16).toInt()
+
+        // Size the label column to the widest category name (capped so bars keep room to breathe).
+        val maxLabelW = items.maxOfOrNull { textPaint.measureText(it.category) } ?: 0f
+        labelW = (maxLabelW + 16f * d).coerceIn(56f * d, 120f * d)
+
+        // Size the amount column to the widest formatted amount actually being shown.
+        val maxAmtW = items.maxOfOrNull { amtPaint.measureText(formatAmt(it.total)) } ?: 0f
+        amtColW = maxAmtW + 4f * d
+
+        val totalHeight = (items.size * (rowH + gap) + 8f * d).toInt()
         layoutParams = layoutParams?.apply { height = totalHeight }
             ?: LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT, totalHeight
@@ -467,20 +487,20 @@ class BarChartView(context: android.content.Context) : android.view.View(context
         requestLayout()
     }
 
+    private fun formatAmt(v: Double) = "Ksh ${String.format("%,.0f", v)}"
+
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
-        if (data.isEmpty()) return
+        if (data.isEmpty() || width == 0) return
 
         val maxVal = data.maxOf { it.total }
-        val rowH = 72f
-        val gap = 20f
-        val labelW = 280f
-        val availW = width - labelW - 120f  // space for label + amount
-        val cornerR = 8f
+        val amtRightEdge = width.toFloat()
+        val barEndX = amtRightEdge - amtColW - labelAmtGap
+        val availW = (barEndX - labelW).coerceAtLeast(4f * d)
 
         data.forEachIndexed { i, item ->
-            val top = i * (rowH + gap) + 8f
-            val barW = ((item.total / maxVal) * availW).toFloat().coerceAtLeast(8f)
+            val top = i * (rowH + gap) + 4f * d
+            val barW = ((item.total / maxVal) * availW).toFloat().coerceAtLeast(4f * d)
 
             // Background track
             canvas.drawRoundRect(
@@ -495,14 +515,16 @@ class BarChartView(context: android.content.Context) : android.view.View(context
                 cornerR, cornerR, barPaint
             )
 
-            // Category label
             val textY = top + rowH / 2f + textPaint.textSize / 3f
-            canvas.drawText(item.category, 0f, textY, textPaint)
 
-            // Amount right-aligned
-            val amtStr = "Ksh ${String.format("%,.0f", item.total)}"
-            val amtX = labelW + availW + 12f
-            canvas.drawText(amtStr, amtX, textY, amtPaint)
+            // Category label — ellipsize instead of overflowing into the bar
+            val label = android.text.TextUtils.ellipsize(
+                item.category, textPaint, labelW - 8f * d, android.text.TextUtils.TruncateAt.END
+            ).toString()
+            canvas.drawText(label, 0f, textY, textPaint)
+
+            // Amount, right-aligned to the view's right edge — never clipped
+            canvas.drawText(formatAmt(item.total), amtRightEdge, textY, amtPaint)
         }
     }
 }

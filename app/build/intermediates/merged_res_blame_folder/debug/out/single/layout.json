@@ -1,0 +1,18 @@
+[
+    {
+        "merged": "com.brian.mpesatracker.app-mergeDebugResources-38:/layout/item_transaction.xml",
+        "source": "com.brian.mpesatracker.app-main-41:/layout/item_transaction.xml"
+    },
+    {
+        "merged": "com.brian.mpesatracker.app-mergeDebugResources-38:/layout/item_category_chip.xml",
+        "source": "com.brian.mpesatracker.app-main-41:/layout/item_category_chip.xml"
+    },
+    {
+        "merged": "com.brian.mpesatracker.app-mergeDebugResources-38:/layout/activity_main.xml",
+        "source": "com.brian.mpesatracker.app-main-41:/layout/activity_main.xml"
+    },
+    {
+        "merged": "com.brian.mpesatracker.app-mergeDebugResources-38:/layout/activity_categorize.xml",
+        "source": "com.brian.mpesatracker.app-main-41:/layout/activity_categorize.xml"
+    }
+]
